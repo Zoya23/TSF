@@ -1,0 +1,62 @@
+AIM: Measurement of seasonal indices Link Relative method. 
+Problem Statement: 
+∙ Seasonal Pattern Identification: Utilize the Link Relative method to measure seasonal indices, revealing recurring patterns or cycles in the data. ∙ Trend and Seasonality Analysis: Analyze and separate seasonal variations fromthe trend component to improve the accuracy of time series forecasts. 
+Theory: 
+∙ Link Relative Method: This method calculates the seasonal indices bydetermining the relative movement of data from one period to the next withinaseason. The link relative is obtained by dividing the value of each period by the valueof the preceding period. 
+∙ Seasonal Indices Calculation: Seasonal indices are computed by averagingthelink relatives for corresponding periods (e.g., months or quarters) over multiplecycles. These indices are then adjusted to ensure that their sum equals the number of periods in a cycle. 
+∙ Visualization: Plotting the seasonal indices alongside the original data facilitates the visualization of periodic fluctuations and enhances the understanding of seasonal impacts. This graphical representation is essential for refining forecasting models toaccount for identified seasonal effects. 
+
+
+
+Code: 
+import pandas as pd 
+import numpy as np 
+import matplotlib.pyplot as plt 
+# Load your dataset 
+path = r"C:\Users\Desktop\DataScience\Sem 2\Time_Series_Analysis\Practical\Symphony-Data.csv" 
+df = pd.read_csv(path) 
+# Droping unnecessary rows 
+df = df.drop(['OPEN', 'HIGH', 'LOW', 'VOLUME', 'CHANGE(%)'], axis=1)
+# Converting Date in datetime object 
+df['DATE'] = pd.to_datetime(df['DATE'], format = "%d-%b-%y")
+# Arranging Data in ascending order by Date df = df.sort_values(by = 'DATE', ascending=True) # Extracting Month and Year Info form Date 
+df['Year'] = df['DATE'].dt.year 
+df['Month'] = df['DATE'].dt.month 
+# Calculate the monthly mean prices for each year 
+df = df.groupby(['Month', 'Year'])['PRICE'].mean().unstack() # unstack command will help to create povit table 
+# Step 1: Calculate the link relatives 
+df['Link_Relative_Y2'] = df[2020] / df[2019] df['Link_Relative_Y3'] = df[2021] / df[2020] df['Link_Relative_Y4'] = df[2022] / df[2021] df['Link_Relative_Y5'] = df[2023] / df[2022] df['Link_Relative_Y6'] = df[2024] / df[2023] 
+# Calculate the average link relatives for each month df['Average_Link_Relative'] = df[['Link_Relative_Y2', 'Link_Relative_Y3', 'Link_Relative_Y4', 'Link_Relative_Y5', 'Link_Relative_Y6']].mean(axis=1) 
+# Normalize the seasonal indices 
+seasonal_indices = df['Average_Link_Relative'] seasonal_indices /= seasonal_indices.sum() seasonal_indices *= 12 # Because we have 12 months 
+# Deseasonalize the data 
+df['Deseasonalized_Year1'] = df[2019] / seasonal_indices df['Deseasonalized_Year2'] = df[2020] / seasonal_indices df['Deseasonalized_Year3'] = df[2021] / seasonal_indices df['Deseasonalized_Year4'] = df[2022] / seasonal_indices df['Deseasonalized_Year5'] = df[2023] / seasonal_indices df['Deseasonalized_Year6'] = df[2024] / seasonal_indices 
+# Plotting 
+plt.figure(figsize=(14, 8)) 
+# Plot original data 
+plt.subplot(3, 1, 1) 
+plt.plot(df.index, df[2019], label='2019', marker='o') plt.plot(df.index, df[2020], label='2020', marker='o') plt.plot(df.index, df[2021], label='2021', marker='o') plt.plot(df.index, df[2022], label='2022', marker='o') plt.plot(df.index, df[2023], label='2023', marker='o') plt.plot(df.index, df[2024], label='2024', marker='o') plt.title('Original Data')
+plt.xlabel('Month') 
+plt.ylabel('Stock Price(Rs.)') 
+plt.legend(loc = 'upper right') 
+# Plot seasonal indices 
+plt.subplot(3, 1, 2) 
+plt.plot(df.index, seasonal_indices, label='Seasonal Index', marker='o', color='orange') 
+plt.title('Seasonal Indices') 
+plt.xlabel('Month') 
+plt.ylabel('Index') 
+plt.legend() 
+# Plot deseasonalized data 
+plt.subplot(3, 1, 3) 
+plt.plot(df.index, df['Deseasonalized_Year1'], label='2019', marker='o') 
+plt.plot(df.index, df['Deseasonalized_Year2'], label='2020', marker='o') 
+plt.plot(df.index, df['Deseasonalized_Year3'], label='2021', marker='o') 
+plt.plot(df.index, df['Deseasonalized_Year4'], label='2022', marker='o') 
+plt.plot(df.index, df['Deseasonalized_Year5'], label='2023', marker='o') 
+plt.plot(df.index, df['Deseasonalized_Year6'], label='2024', marker='o') 
+plt.title('Deseasonalized Data') 
+plt.xlabel('Month') 
+plt.ylabel('Deseasonalized Sales') 
+plt.legend(loc = 'upper right') 
+plt.tight_layout() 
+plt.show()
