@@ -1,0 +1,77 @@
+
+
+PRACTICAL-05 
+AIM: Measurement of Seasonal indices Ratio-to-Trend method. 
+Problem Statement: 
+∙ Seasonal Pattern Identification: Use the Ratio-to-Trend method to measure seasonal indices, identifying repeating patterns or cycles in the data. ∙ Trend and Seasonality Separation: Separate the underlying trend fromseasonal variations to better understand and forecast time series data. 
+Theory: 
+∙ Ratio-to-Trend Method: This method involves dividing the actual data values bythe trend values to isolate the seasonal component. The seasonal indices are thencalculated by averaging these ratios for each period (e.g., month or quarter) over multiple cycles. 
+∙ Seasonal Indices Calculation: By normalizing these average ratios, we obtainseasonal indices that represent the relative level of the data in each period comparedto the overall average. These indices help in adjusting forecasts to account for regular seasonal fluctuations. 
+∙ Visualization: Plotting the seasonal indices alongside the trend-adjusted data helps in visualizing the periodicity and magnitude of seasonal effects, providing insights for improved forecasting and analysis. 
+Code: 
+import pandas as pd 
+import numpy as np 
+import matplotlib.pyplot as plt 
+# Load your dataset 
+path = r"C:\Users\Desktop\DataScience\Sem 2\Time_Series_Analysis\Practical\Symphony-Data.csv" 
+df = pd.read_csv(path) 
+# Droping unnecessary rows 
+df = df.drop(['OPEN', 'HIGH', 'LOW', 'VOLUME', 'CHANGE(%)'], axis=1)
+# Converting Date in datetime object 
+df['DATE'] = pd.to_datetime(df['DATE'], format = "%d-%b-%y")
+# Arranging Data in ascending order by Date df = df.sort_values(by = 'DATE', ascending=True) # Extracting Month and Year Info form Date 
+df['Year'] = df['DATE'].dt.year 
+df['Month'] = df['DATE'].dt.month 
+# Calculate the monthly mean prices for each year 
+monthly_mean = df.groupby(['Month', 'Year'])['PRICE'].mean().unstack() # unstack command will help to create povit table 
+plt.plot(monthly_mean.index, monthly_mean[2019], marker = 'o', label= '2019') 
+plt.plot(monthly_mean.index, monthly_mean[2020], marker = 'o', label= '2020') 
+plt.plot(monthly_mean.index, monthly_mean[2021], marker = 'o', label= '2021') 
+plt.plot(monthly_mean.index, monthly_mean[2022], marker = 'o', label= '2022') 
+plt.plot(monthly_mean.index, monthly_mean[2023], marker = 'o', label= '2023') 
+plt.plot(monthly_mean.index, monthly_mean[2024], marker = 'o', label= '2024') 
+plt.legend() 
+plt.title('Month-wise avg Stock Price') 
+Text(0.5, 1.0, 'Month-wise avg Stock Price') 
+# Estimating trend i.e. yearly mean 
+mean_2019 = monthly_mean[2019].mean()
+mean_2020 = monthly_mean[2020].mean() 
+mean_2021 = monthly_mean[2021].mean() 
+mean_2022 = monthly_mean[2022].mean() 
+mean_2023 = monthly_mean[2023].mean() 
+mean_2024 = monthly_mean[2024].mean() 
+year = [2019,2020,2021,2022,2023,2024] 
+yearly_mean_price = [mean_2019, mean_2020, mean_2021, mean_2022, mean_2023, mean_2024] 
+plt.plot(year, yearly_mean_price, marker = 'o') plt.title('Trend') 
+plt.xlabel('Year') 
+plt.ylabel('Avg Price (Rs.)') 
+Text(0, 0.5, 'Avg Price (Rs.)') 
+
+# Computing Ratio 
+monthly_mean['ratio_2019'] = monthly_mean[2019]/mean_2019 monthly_mean['ratio_2020'] = monthly_mean[2020]/mean_2020 monthly_mean['ratio_2021'] = monthly_mean[2021]/mean_2021 monthly_mean['ratio_2022'] = monthly_mean[2022]/mean_2022 monthly_mean['ratio_2023'] = monthly_mean[2023]/mean_2023 monthly_mean['ratio_2024'] = monthly_mean[2024]/mean_2024 
+ratio = monthly_mean[['ratio_2019', 'ratio_2020', 'ratio_2021', 'ratio_2022', 'ratio_2023', 'ratio_2024']] 
+# Normalized Seasonal Index 
+normalized_indices = ratio.mean(axis=1) 
+normalized_indices 
+plt.plot(normalized_indices.index, normalized_indices, marker = 'o')
+plt.xlabel('Month') 
+plt.ylabel('Normalized Indices') 
+plt.title('Normalized Seasonal Indices') 
+Text(0.5, 1.0, 'Normalized Seasonal Indices') 
+# Deseonalized Data 
+monthly_mean = df.groupby(['Year', 'Month'])['PRICE'].mean().unstack() 
+monthly_mean['Jan'] = monthly_mean[1] / normalized_indices[1] monthly_mean['Feb'] = monthly_mean[2] / normalized_indices[2] monthly_mean['Mar'] = monthly_mean[3] / normalized_indices[3] monthly_mean['Apr'] = monthly_mean[4] / normalized_indices[4] monthly_mean['May'] = monthly_mean[5] / normalized_indices[5] monthly_mean['Jun'] = monthly_mean[6] / normalized_indices[6] monthly_mean['Jul'] = monthly_mean[7] / normalized_indices[7] monthly_mean['Aug'] = monthly_mean[8] / normalized_indices[8] monthly_mean['Sep'] = monthly_mean[9] / normalized_indices[9] monthly_mean['Oct'] = monthly_mean[10] / normalized_indices[10] 
+monthly_mean['Nov'] = monthly_mean[11] / normalized_indices[11] monthly_mean['Dec'] = monthly_mean[12] / normalized_indices[12] 
+deseanolized_price = monthly_mean[['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']] deseanolized_price = deseanolized_price.T # Dataframe is transposedto get it in correct form 
+plt.plot(deseanolized_price.index, deseanolized_price[2019], marker= 'o', label = '2019') 
+plt.plot(deseanolized_price.index, deseanolized_price[2020], marker= 'o', label = '2020') 
+plt.plot(deseanolized_price.index, deseanolized_price[2021], marker= 'o', label = '2021') 
+plt.plot(deseanolized_price.index, deseanolized_price[2022], marker
+= 'o', label = '2022') 
+plt.plot(deseanolized_price.index, deseanolized_price[2023], marker= 'o', label = '2023') 
+plt.plot(deseanolized_price.index, deseanolized_price[2024], marker= 'o', label = '2023') 
+plt.legend() 
+plt.xlabel('Year') 
+plt.ylabel('Stock Price (Rs.)') 
+plt.title('Deseasonalized Price') 
+Text(0.5, 1.0, 'Deseasonalized Price')
