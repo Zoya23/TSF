@@ -1,0 +1,115 @@
+Code:
+path3 = "C:\\Users\\Desktop\\DataScience\\Sem 2\\Time_Series_Analysis\\Practical\\co2-ppm-daily.csv"
+# importing relavant libraries
+import numpy as np
+import pandas as pd
+from scipy.optimize import curve_fit
+from sklearn.metrics import r2_score
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Creating the DataFrame
+CO2_emission = pd.read_csv(path3)
+
+CO2_emission.head()
+         date   value
+0  1958-03-30  316.16
+1  1958-03-31  316.40
+2  1958-04-02  317.67
+3  1958-04-03  317.76
+4  1958-04-04  317.09
+# Ensure DATE is converted to a datetime type and sorted
+CO2_emission['date'] = pd.to_datetime(CO2_emission['date'])
+CO2_emission.sort_values('date', inplace=True)
+
+
+# Identify x and y axis
+x_data = CO2_emission['date']
+y_data = CO2_emission['value']
+
+# Convert dates to a numerical format for fitting (e.g., days since start)
+CO2_emission['Time'] = (CO2_emission['date'] - CO2_emission['date'].min()).dt.days
+x_neumerical = CO2_emission['Time']
+# Plot the time series to visualize the data
+plt.figure(figsize=(12, 6))
+plt.plot(x_data, y_data, label='Carbon dioxide Emission')
+plt.title('Carbon Dioxide Emission Over Time')
+plt.xlabel('Year')
+plt.ylabel("Emission (in MT)")
+plt.legend()
+plt.show()
+
+ 
+
+# Define the model for the modified exponential curve
+def mod_exp_func(t, a, b, c):
+    return a * np.exp(b * t) + c
+# Predicting initial guess values of Constants
+
+# Initial guess for 'a'
+a_guess = y_data[0]
+
+# Calculate the middle index and the corresponding guess for 'b'
+if len(x_data) % 2 == 0:  # If even number of elements
+    central_index = len(x_data) // 2 - 1  # Use the lower middle index
+    centre_value_of_x = x_data[central_index]
+else:  # If odd number of elements
+    central_index = len(x_data) // 2
+    centre_value_of_x = x_data[central_index]
+
+# Since the value of x is Pandas.TimeStamp, extracting year for predicting value of b
+    
+timestamp_obj = pd.Timestamp(centre_value_of_x)
+b_guess = 1/ timestamp_obj.year
+  
+    
+# Initial guess for 'c'
+c_guess =y_data[0]
+
+print(f"Initial Guess values of constants a, b, and c are {a_guess:.2f}, {b_guess:.4f}, {c_guess:.2f} respectively.")
+Initial Guess values of constants a, b, and c are 316.16, 0.0005, 316.16 respectively.
+# Fit the model to the data
+p0 = (a_guess, b_guess, c_guess)
+popt, pcov = curve_fit(mod_exp_func, x_neumerical, y_data, p0=p0, maxfev = 8000)
+
+
+# Identifying optimal values of parameters
+print(f"Optimized values of constants a, b, and c for best fit are", popt,  "respectively.")
+print("**************************************************************************************")
+
+# Identify covariance matrix for estimating "error" of the paramters a,b and c
+
+print("Covariance matrix of the parameters a, b and c is:\n", pcov)
+print("**************************************************************************************")
+
+sns.heatmap(pcov, cmap='coolwarm', annot=True)
+Optimized values of constants a, b, and c for best fit are [5.84012376e+01 4.37880459e-05 2.55202355e+02] respectively.
+************************************************************************
+Covariance matrix of the parameters a, b and c is:
+ [[ 2.29881234e-01 -1.10734991e-07 -2.48958123e-01]
+ [-1.10734991e-07  5.36711372e-14  1.19498011e-07]
+ [-2.48958123e-01  1.19498011e-07  2.70451946e-01]]
+************************************************************************
+<AxesSubplot:>
+ 
+
+# Use the optimized parameters to plot the fitted curve
+y_pred = mod_exp_func(x_neumerical, *popt)
+
+# Plotting the original data and the fitted curve
+plt.figure(figsize=(12, 6))
+plt.plot(x_data, y_data, label='Original Data')
+plt.plot(x_data, y_pred, '--', label='Fitted Curve')
+plt.title('Carbon Dioxide Emission Over Time and Fitted Modified Exponential Curve')
+plt.xlabel('Year')
+plt.ylabel('Emission (in MT)')
+plt.legend()
+plt.show()
+
+ 
+
+# Calculate R^2
+r_squared = r2_score(y_data, y_pred)
+print("Coefficient of Determination = " ,r_squared)
+Coefficient of Determination =  0.992296463718203
+
